@@ -4,16 +4,43 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-size_t	findline(char *s, char c)
+char	*ft_strdup(const char *s1)
+{
+	char	*str;
+	int		i;
+	int		j;
+
+	i = 0;
+	j = 0;
+	while (s1[i])
+		i++;
+	str = malloc((i + 1) * sizeof(char));
+	if (str == NULL)
+		return (NULL);
+	while (j < i)
+	{
+		str[j] = s1[j];
+		j++;
+	}
+	str[j] = '\0';
+	return (str);
+}
+
+size_t	findline(char *s, char c, size_t *i)
 {
 	size_t	index;
 
-	index = 0;
-	while (s[index++])
+	index = *i;
+	while (s[index])
 	{
 		if (s[index] == c)
+		{
+			*i = index + 1;
 			return (1);
+		}
+		index++;
 	}
+	*i = index;
 	return (0);
 }
 
@@ -30,15 +57,16 @@ char *read_line(char *s, size_t *ptr)
 	size_t	index;
 
 	index = *ptr;
-
 	count = 0;
-	while (s[index] != '\n')
+	if (s[index] == '\0')
+		return (NULL);
+	while (s[index] != '\n' && s[index] != '\0')
 	{
 		count++;
 		index++;
 	}
 	nstr = ft_substr(s, (index - count), count + 1);
-	*ptr = index;
+	*ptr = index + 1;
 	return (nstr);
 }
 
@@ -47,16 +75,24 @@ char    *get_next_line(int fd)
 	static char		*str;
 	static char		buf[BUFFER_SIZE + 1];
 	static size_t	index;
+	static size_t	index2;
+	static size_t	readchar;
 
 	if (fd == -1)
 		return (NULL);
 	if (index == 0)
 		str = malloc(sizeof(char *));
-	while (read(fd, buf, BUFFER_SIZE) != 0 || findline(buf, '\n') == 0)
+	while (((readchar += read(fd, buf, BUFFER_SIZE)) != 0))
 	{
 		str = re_alloc(str, ft_strjoin(str, buf));
-		if (findline(str, '\n') == 1)
+		//str = re_alloc(str, ft_strdup(buf));
+		if (findline(str, '\n', &index2) == 1)
 			break;
+	}
+	if (index == readchar)
+	{
+		free(str);
+		return (NULL);
 	}
 	return (read_line(str, &index));
 }
