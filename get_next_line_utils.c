@@ -62,44 +62,20 @@ char	*ft_strjoin(char const *s1, char const *s2)
 {
 	char		*ns;
 	size_t		start;
-	size_t		i;
-	size_t		k;
 
 	if (!s1)
 		return ((char *)s2);
 	if (!s2)
 		return ((char *)s1);
 	start = ft_strlen(s1);
-	i = 0;
-	k = 0;
 	ns = malloc(((ft_strlen(s1) + ft_strlen(s2)) + 1) * sizeof(char));
 	if (ns == NULL)
 		return (NULL);
 	ft_strlcpy(ns, s1, (ft_strlen(s1) + ft_strlen(s2)) + 1);
 	ft_strlcat(ns, s2, (ft_strlen(s1) + ft_strlen(s2)) + 1);
+	free((void *)s1);
+	free((void *)s2);
 	return (ns);
-}
-
-char	*ft_strdup(const char *s1)
-{
-	char	*str;
-	int		i;
-	int		j;
-
-	i = 0;
-	j = 0;
-	while (s1[i])
-		i++;
-	str = malloc((i + 1) * sizeof(char));
-	if (str == NULL)
-		return (NULL);
-	while (j < i)
-	{
-		str[j] = s1[j];
-		j++;
-	}
-	str[j] = '\0';
-	return (str);
 }
 
 char	*ft_substr(const char *s, unsigned int start, size_t len)

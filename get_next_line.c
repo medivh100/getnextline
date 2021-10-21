@@ -4,6 +4,24 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+void	*ft_memset(void *b, int c, size_t len)
+{
+	size_t			cd;
+	unsigned char	cout;
+	unsigned char	*ptr;
+
+	ptr = (unsigned char *) b;
+	cout = (unsigned char) c;
+	cd = 0;
+	while (cd < len)
+	{
+		*ptr = cout;
+		ptr++;
+		cd++;
+	}
+	return (b);
+}
+
 char	*ft_strdup(const char *s1)
 {
 	char	*str;
@@ -44,13 +62,7 @@ size_t	findline(char *s, char c, size_t *i)
 	return (0);
 }
 
-char	*re_alloc(char *s, char *nstr)
-{
-	free(s);
-	return (nstr);
-}
-
-char *read_line(char *s, size_t *ptr)
+char *read_line(char *s, size_t *ptr, char *buf)
 {
 	char	*nstr;
 	size_t	count;
@@ -59,7 +71,11 @@ char *read_line(char *s, size_t *ptr)
 	index = *ptr;
 	count = 0;
 	if (s[index] == '\0')
+	{
+		free(buf);
+		free(s);
 		return (NULL);
+	}
 	while (s[index] != '\n' && s[index] != '\0')
 	{
 		count++;
@@ -73,26 +89,28 @@ char *read_line(char *s, size_t *ptr)
 char    *get_next_line(int fd)
 {
 	static char		*str;
-	static char		buf[BUFFER_SIZE + 1];
+	char			*buf;
 	static size_t	index;
 	static size_t	index2;
-	static size_t	readchar;
+	size_t			res;
 
-	if (fd == -1)
+	buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
+	str = malloc(sizeof(char));
+	if (buf == NULL || str == NULL)
 		return (NULL);
-	if (index == 0)
-		str = malloc(sizeof(char *));
-	while (((readchar += read(fd, buf, BUFFER_SIZE)) != 0))
+	if (!(res = read(fd, buf, BUFFER_SIZE)) && index == 0)
 	{
-		str = re_alloc(str, ft_strjoin(str, buf));
-		//str = re_alloc(str, ft_strdup(buf));
-		if (findline(str, '\n', &index2) == 1)
-			break;
-	}
-	if (index == readchar)
-	{
+		free(buf);
 		free(str);
 		return (NULL);
 	}
-	return (read_line(str, &index));
+	if (res < BUFFER_SIZE && index == 0)
+		str = ft_strjoin(str, buf);
+	while (res == BUFFER_SIZE && findline(str, '\n', &index2) == 0)
+	{
+		str = ft_strjoin(str, buf);
+		buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
+		res = read(fd, buf, BUFFER_SIZE);
+	}
+	return (read_line(str, &index, buf));
 }
