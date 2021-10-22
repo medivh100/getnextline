@@ -3,46 +3,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <stdio.h>
-
-void	*ft_memset(void *b, int c, size_t len)
-{
-	size_t			cd;
-	unsigned char	cout;
-	unsigned char	*ptr;
-
-	ptr = (unsigned char *) b;
-	cout = (unsigned char) c;
-	cd = 0;
-	while (cd < len)
-	{
-		*ptr = cout;
-		ptr++;
-		cd++;
-	}
-	return (b);
-}
-
-char	*ft_strdup(const char *s1)
-{
-	char	*str;
-	int		i;
-	int		j;
-
-	i = 0;
-	j = 0;
-	while (s1[i])
-		i++;
-	str = malloc((i + 1) * sizeof(char));
-	if (str == NULL)
-		return (NULL);
-	while (j < i)
-	{
-		str[j] = s1[j];
-		j++;
-	}
-	str[j] = '\0';
-	return (str);
-}
+#include <string.h>
 
 size_t	findline(char *s, char c, size_t *i)
 {
@@ -72,8 +33,8 @@ char *read_line(char *s, size_t *ptr, char *buf)
 	count = 0;
 	if (s[index] == '\0')
 	{
-		free(buf);
 		free(s);
+		free(buf);
 		return (NULL);
 	}
 	while (s[index] != '\n' && s[index] != '\0')
@@ -83,7 +44,27 @@ char *read_line(char *s, size_t *ptr, char *buf)
 	}
 	nstr = ft_substr(s, (index - count), count + 1);
 	*ptr = index + 1;
+	free(buf);
 	return (nstr);
+}
+
+char	*ft_strjoin(char const *s1, char const *s2)
+{
+	char		*ns;
+	size_t		start;
+
+	if (!s1)
+		return ((char *)s2);
+	if (!s2)
+		return ((char *)s1);
+	start = ft_strlen(s1);
+	ns = malloc(((ft_strlen(s1) + ft_strlen(s2)) + 1) * sizeof(char));
+	if (ns == NULL)
+		return (NULL);
+	ft_strlcpy(ns, s1, (ft_strlen(s1) + ft_strlen(s2)) + 1);
+	ft_strlcat(ns, s2, (ft_strlen(s1) + ft_strlen(s2)) + 1);
+	free((void *)s1);
+	return (ns);
 }
 
 char    *get_next_line(int fd)
@@ -92,25 +73,29 @@ char    *get_next_line(int fd)
 	char			*buf;
 	static size_t	index;
 	static size_t	index2;
-	size_t			res;
 
 	buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
-	str = malloc(sizeof(char));
-	if (buf == NULL || str == NULL)
-		return (NULL);
-	if (!(res = read(fd, buf, BUFFER_SIZE)) && index == 0)
+	//check pour premiere iteration pour pas alloc str pour rien
+	if (index == 0)
+		str = malloc(sizeof(char));
+	//test pour 
+	if ((read(fd, buf, BUFFER_SIZE)) == -1 && index == 0)
 	{
 		free(buf);
 		free(str);
 		return (NULL);
 	}
-	if (res < BUFFER_SIZE && index == 0)
-		str = ft_strjoin(str, buf);
-	while (res == BUFFER_SIZE && findline(str, '\n', &index2) == 0)
+	str = ft_strjoin(str, buf);
+	free(buf);
+	buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
+	while (read(fd, buf, BUFFER_SIZE) != 0)
 	{
 		str = ft_strjoin(str, buf);
-		buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
-		res = read(fd, buf, BUFFER_SIZE);
+		free(buf);
+		buf = malloc((BUFFER_SIZE + 1) * sizeof(char)); 
+		if (findline(str, '\n', &index2) == 1)
+			break;
 	}
-	return (read_line(str, &index, buf));
+	str = read_line(str, &index, buf);
+	return (str);
 }
