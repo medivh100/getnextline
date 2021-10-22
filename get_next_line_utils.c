@@ -17,10 +17,8 @@ size_t	ft_strlen(const char *s)
 size_t	ft_strlcat(char *dst, const char *src, size_t dstsize)
 {
 	size_t	start;
-	size_t	count;
 
 	start = ft_strlen(dst);
-	count = 0;
 	if (start + 1 > dstsize)
 		return (ft_strlen(src) + dstsize);
 	while (*src && start < (dstsize - 1))
