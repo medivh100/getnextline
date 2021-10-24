@@ -45,7 +45,7 @@ size_t	findline(char *s, char c, size_t *i)
 	return (0);
 }
 
-char *read_line(char *s, size_t *ptr, char *buffer, char *temp)
+char *read_line(char *s, size_t *ptr, char *buffer)
 {
 	char	*nstr;
 	size_t	count;
@@ -56,7 +56,6 @@ char *read_line(char *s, size_t *ptr, char *buffer, char *temp)
 	if (s[index] == '\0')
 	{
 		free(buffer);
-		free(temp);
 		free(s);
 		return (NULL);
 	}
@@ -69,7 +68,7 @@ char *read_line(char *s, size_t *ptr, char *buffer, char *temp)
 		*ptr = index;
 	if (s[index] == '\n')
 		*ptr = index + 1;
-	free(temp);
+	free(buffer);
 	nstr = ft_substr(s, (index - count), count + 1);
 	return (nstr);
 }
@@ -96,29 +95,26 @@ char    *get_next_line(int fd)
 {
 	static char		*str;
 	static char		*buf;
-	char			*tmp;
 	static size_t	index;
 	static size_t	index2;
+	int				res;
 
-	tmp = NULL;
+	res = 1;
+	buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
 	if (index == 0)
+		str = malloc((BUFFER_SIZE + 1) * sizeof(char));
+	while (res != 0 && findline(str, '\n', &index2) != 1)
 	{
-		buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
-		if ((read(fd, buf, BUFFER_SIZE)) == -1)
+		buf = re_alloc('\0', (BUFFER_SIZE + 1), buf);
+		res = read(fd, buf, BUFFER_SIZE);
+		if (res == -1)
 		{
 			free(buf);
+			free(str);
 			return (NULL);
 		}
-		str = malloc((BUFFER_SIZE + 1) * sizeof(char));
 		str = ft_strjoin(str, buf);
 		buf = re_alloc('\0', (BUFFER_SIZE + 1), buf);
 	}
-	while (read(fd, buf, BUFFER_SIZE) != 0)
-	{
-		str = ft_strjoin(str, buf);
-		buf = re_alloc('\0', (BUFFER_SIZE + 1), buf);
-		if (findline(str, '\n', &index2) == 1)
-			break;
-	}
-	return (tmp = read_line(str, &index, buf, tmp));
+	return (buf = read_line(str, &index, buf));
 }
