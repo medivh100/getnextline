@@ -5,12 +5,24 @@
 #include <stdio.h>
 #include <string.h>
 
-char *re_alloc(char *tofree)
+char *re_alloc(int c, size_t len, char *tofree)
 {
 	char *rstr;
+	size_t			cd;
+	unsigned char	cout;
+	unsigned char	*ptr;
+
 	rstr = NULL;
 	rstr = malloc((BUFFER_SIZE + 1) * sizeof(char));
-	//printf("%s%p\n","L'adresse de rstr: ", rstr);
+	ptr = (unsigned char *) rstr;
+	cout = (unsigned char) c;
+	cd = 0;
+	while (cd < len)
+	{
+		*ptr = cout;
+		ptr++;
+		cd++;
+	}
 	free(tofree);
 	return (rstr);
 }
@@ -33,7 +45,7 @@ size_t	findline(char *s, char c, size_t *i)
 	return (0);
 }
 
-char *read_line(char *s, size_t *ptr, char *buf)
+char *read_line(char *s, size_t *ptr, char *buffer, char *temp)
 {
 	char	*nstr;
 	size_t	count;
@@ -43,7 +55,8 @@ char *read_line(char *s, size_t *ptr, char *buf)
 	count = 0;
 	if (s[index] == '\0')
 	{
-		free(buf);
+		free(buffer);
+		free(temp);
 		free(s);
 		return (NULL);
 	}
@@ -52,27 +65,29 @@ char *read_line(char *s, size_t *ptr, char *buf)
 		count++;
 		index++;
 	}
+	if (s[index] == '\0')
+		*ptr = index;
+	if (s[index] == '\n')
+		*ptr = index + 1;
+	free(temp);
 	nstr = ft_substr(s, (index - count), count + 1);
-	*ptr = index + 1;
-	free(buf);
-	buf = NULL;
 	return (nstr);
 }
 
-char	*ft_strjoin(char const *s1, char const *s2)
+char	*ft_strjoin(char *s1, char *s2)
 {
 	char		*ns;
 
 	if (!s1)
-		return ((char *)s2);
+		return (s2);
 	if (!s2)
-		return ((char *)s1);
+		return (s1);
 	ns = malloc(((ft_strlen(s1) + ft_strlen(s2)) + 1) * sizeof(char));
 	if (ns == NULL)
 		return (NULL);
 	ft_strlcpy(ns, s1, (ft_strlen(s1) + ft_strlen(s2)) + 1);
 	ft_strlcat(ns, s2, (ft_strlen(s1) + ft_strlen(s2)) + 1);
-	free((void*)s1);
+	free(s1);
 	s1 = NULL;
 	return (ns);
 }
@@ -80,33 +95,30 @@ char	*ft_strjoin(char const *s1, char const *s2)
 char    *get_next_line(int fd)
 {
 	static char		*str;
-	char			*buf;
+	static char		*buf;
 	char			*tmp;
 	static size_t	index;
 	static size_t	index2;
 
-	buf = NULL;
 	tmp = NULL;
-	buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
-	if ((read(fd, buf, BUFFER_SIZE)) == -1)
-	{
-		free(buf);
-		return (NULL);
-	}
 	if (index == 0)
-		str = malloc((BUFFER_SIZE) * sizeof(char));
-	str = ft_strjoin(str, buf);
-	buf = re_alloc(buf);
-	//printf("%s%p %p\n","1: L'adresse de buf et str: ", buf, str);
+	{
+		buf = malloc((BUFFER_SIZE + 1) * sizeof(char));
+		if ((read(fd, buf, BUFFER_SIZE)) == -1)
+		{
+			free(buf);
+			return (NULL);
+		}
+		str = malloc((BUFFER_SIZE + 1) * sizeof(char));
+		str = ft_strjoin(str, buf);
+		buf = re_alloc('\0', (BUFFER_SIZE + 1), buf);
+	}
 	while (read(fd, buf, BUFFER_SIZE) != 0)
 	{
 		str = ft_strjoin(str, buf);
-		buf = re_alloc(buf);
-		//printf("%s%p %p\n","2: L'adresse de buf et str: ", buf, str);
+		buf = re_alloc('\0', (BUFFER_SIZE + 1), buf);
 		if (findline(str, '\n', &index2) == 1)
 			break;
 	}
-	buf = re_alloc(buf);
-	tmp = read_line(str, &index, buf);
-	return (tmp);
+	return (tmp = read_line(str, &index, buf, tmp));
 }
