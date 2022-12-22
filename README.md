@@ -8,8 +8,7 @@ Reads from a file descriptor until it encounters a newline characters or EOF and
 it returns null.
 
 Prototype:
-char *
-get_next_line(int fd);
+char *get_next_line(int fd);
 
 ## Getting Started
 
@@ -25,5 +24,5 @@ Simply compile with a main of your choice and the static library file to use the
 
 ## Authors
 
-Yannick St-laurent
+Yannick St-laurent \
 yan_1731@hotmail.com
